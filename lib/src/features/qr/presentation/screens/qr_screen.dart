@@ -82,7 +82,6 @@ class QRScreen extends StatelessWidget {
                   onPressed: () {
                     Share.share(
                       'Scan this code to pay ${user.name} on HaqDaar: ${user.id}',
-                      subject: 'My HaqDaar QR Code',
                     );
                   },
                   icon: const Icon(Icons.share),
