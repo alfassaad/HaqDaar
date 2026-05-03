@@ -41,6 +41,7 @@ class _ScaffoldScreenState extends State<ScaffoldScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTap,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -60,7 +61,7 @@ class _ScaffoldScreenState extends State<ScaffoldScreen> {
           ),
         ],
         selectedItemColor: const Color(0xFF006A4E),
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.grey[600],
       ),
     );
   }

@@ -1,12 +1,25 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:myapp/src/core/providers/app_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class QRScreen extends StatelessWidget {
   const QRScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const String userId = '1234567890'; // Mock user ID
+    final appProvider = context.watch<AppProvider>();
+    final user = appProvider.user;
+
+    // Create a structured QR code
+    final String qrData = jsonEncode({
+      'id': user.id,
+      'name': user.name,
+      'role': user.role.name,
+      'type': 'haqdaar_v1'
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +52,7 @@ class QRScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
+                        color: Colors.grey.withAlpha((0.2 * 255).toInt()),
                         spreadRadius: 2,
                         blurRadius: 8,
                         offset: const Offset(0, 4),
@@ -47,28 +60,33 @@ class QRScreen extends StatelessWidget {
                     ],
                   ),
                   child: QrImageView(
-                    data: userId,
+                    data: qrData,
                     version: QrVersions.auto,
                     size: 200.0,
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'John Doe',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  user.name,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'ID: $userId',
+                  'ID: ${user.id}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Implement share functionality
+                    Share.share(
+                      'Scan this code to pay ${user.name} on HaqDaar: ${user.id}',
+                      subject: 'My HaqDaar QR Code',
+                    );
                   },
                   icon: const Icon(Icons.share),
-                  label: const Text('Share QR Code'),
+                  label: const Text('Share My ID'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
