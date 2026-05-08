@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -44,6 +45,14 @@ class OnboardingScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: Lottie.network(
+                    'https://lottie.host/802619c9-633b-419b-a010-85f269a9307c/A86lQ4vQ1p.json',
+                    height: 300,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox(height: 300),
+                  ),
+                ),
+                const Spacer(),
                 Text(
                   'HaqDaar',
                   style: theme.textTheme.displayLarge?.copyWith(

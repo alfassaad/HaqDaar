@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:myapp/src/core/models/transaction_model.dart' as models;
@@ -21,6 +22,7 @@ class AppProvider with ChangeNotifier {
 
   List<models.Transaction> _transactions = [];
   bool _hasNewNotification = false;
+  bool _isInitialized = false;
   StreamSubscription? _userSub;
   StreamSubscription? _txSub;
   StreamSubscription? _authSub;
@@ -30,6 +32,8 @@ class AppProvider with ChangeNotifier {
   AppProvider() {
     _listenToAuthChanges();
   }
+
+  bool get isInitialized => _isInitialized;
 
   void _listenToAuthChanges() {
     _authSub = _auth.authStateChanges().listen((authUser) async {
@@ -53,6 +57,7 @@ class AppProvider with ChangeNotifier {
         // User is logged out
         _clearUserData();
       }
+      _isInitialized = true;
       notifyListeners();
     });
   }
@@ -134,23 +139,27 @@ class AppProvider with ChangeNotifier {
 
   Future<void> login({
     required String name, 
-    required String id, 
+    required String cnic, 
     required String phone,
     UserRole role = UserRole.recipient,
   }) async {
+    final authUser = _auth.currentUser;
+    if (authUser == null) return;
+
     try {
-      // Try to sync with Firestore
-      final existingUser = await _firestoreService.getUser(id).timeout(const Duration(seconds: 4));
+      // Try to sync with Firestore using the Firebase UID
+      final existingUser = await _firestoreService.getUser(authUser.uid).timeout(const Duration(seconds: 4));
       
       if (existingUser != null) {
         _user = existingUser;
       } else {
         _user = UserProfile(
-          id: id,
+          id: authUser.uid,
           name: name,
+          cnic: cnic,
           role: role,
           balance: 0.0,
-          qrCode: jsonEncode({'id': id, 'name': name, 'role': role.name, 'type': 'haqdaar_v1'}),
+          qrCode: jsonEncode({'id': authUser.uid, 'name': name, 'role': role.name, 'type': 'haqdaar_v1'}),
           phoneNumber: phone,
         );
         await _firestoreService.saveUser(_user).timeout(const Duration(seconds: 4));
@@ -187,14 +196,18 @@ class AppProvider with ChangeNotifier {
   Future<void> updateProfile({
     String? name, 
     String? phoneNumber, 
+    String? cnic,
     UserRole? role,
+    String? profileImageUrl,
     bool? biometricEnabled, 
     bool? notificationsEnabled
   }) async {
     final updatedUser = _user.copyWith(
       name: name ?? _user.name,
       phoneNumber: phoneNumber ?? _user.phoneNumber,
+      cnic: cnic ?? _user.cnic,
       role: role ?? _user.role,
+      profileImageUrl: profileImageUrl ?? _user.profileImageUrl,
       biometricEnabled: biometricEnabled ?? _user.biometricEnabled,
       notificationsEnabled: notificationsEnabled ?? _user.notificationsEnabled,
     );
@@ -203,13 +216,22 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> adminUpdateUser(String userId, {String? name, String? id, UserRole? role}) async {
+  Future<bool> uploadProfilePicture(File imageFile) async {
+    final url = await _firestoreService.uploadProfileImage(_user.id, imageFile);
+    if (url != null) {
+      await updateProfile(profileImageUrl: url);
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> adminUpdateUser(String userId, {String? name, String? cnic, UserRole? role}) async {
     if (!_user.isAdmin) return;
     final index = _allUsers.indexWhere((u) => u.id == userId);
     if (index != -1) {
       final updatedUser = _allUsers[index].copyWith(
         name: name ?? _allUsers[index].name,
-        id: id ?? _allUsers[index].id,
+        cnic: cnic ?? _allUsers[index].cnic,
         role: role ?? _allUsers[index].role,
       );
       _allUsers[index] = updatedUser;

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:myapp/src/core/providers/app_provider.dart';
 import 'package:myapp/src/core/models/user_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 class PaymentConfirmationScreen extends StatefulWidget {
   final String merchantId;
@@ -103,30 +104,48 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              Lottie.network(
+                'https://lottie.host/85a12534-7d52-441d-93d3-1d017a4c7e63/l899zP0P9I.json',
+                width: 150,
+                height: 150,
+                repeat: false,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.check_circle, 
+                  color: Colors.green, 
+                  size: 100
+                ),
+              ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Payment Successful!',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Rs. $amount sent to $_recipientName',
+                'Rs. ${amount.toStringAsFixed(0)} sent to $_recipientName',
                 textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.go('/home');
-              },
-              child: const Text('OK'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.go('/home');
+                },
+                child: const Text('Back to Home'),
+              ),
             ),
           ],
         ),
@@ -144,7 +163,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
       appBar: AppBar(
         title: const Text('Confirm Payment'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,7 +221,7 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 32),
             ElevatedButton(
               onPressed: _isAmountValid ? () => _handlePayment(context) : null,
               style: ElevatedButton.styleFrom(

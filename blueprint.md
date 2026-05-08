@@ -26,39 +26,21 @@ HaqDaar (meaning 'One Who Deserves Rights' in Urdu) is a mobile-first platform t
 - **Theming:** Centralized `ThemeData` with Material 3, `ColorScheme.fromSeed`, custom `TextTheme` using Google Fonts, and support for light/dark modes.
 - **Navigation:** A combination of a `BottomNavigationBar` for the main sections (Home, QR, History, Profile) and direct routing for other screens like Onboarding, Login, and Scan & Pay.
 
-## Current Plan: Phase 1 - Beneficiary UI Foundation (Completed)
+## Current Plan: Phase 2 - Firebase Integration & Visual Polish
 
-This initial phase focused on building the foundational UI and navigation for the beneficiary-facing application.
+This phase focuses on strengthening the Firebase backend integration and adding high-quality visual elements using Lottie.
 
-### 1. Project Scaffolding & Dependency Management (Completed)
-- **Action:** Added initial required packages to `pubspec.yaml`:
-  - `provider`, `go_router`, `google_fonts`, `qr_flutter`, `mobile_scanner`
+### 1. Visual Enhancement with Lottie
+- **Action:** Integrate Lottie animations into the `OnboardingScreen` and `PaymentConfirmationScreen`.
+- **Goal:** Improve user engagement and provide satisfying feedback for successful transactions.
 
-### 2. Core Application Structure (Completed)
-- **Action:** Established the root of the application in `lib/main.dart`.
-- **Details:**
-  - Implemented `ThemeProvider` for theme management.
-  - Configured `MaterialApp.router` with `go_router`.
-  - Defined light and dark themes.
+### 2. Profile Management & Image Upload
+- **Action:** Add `firebase_storage` dependency and implement profile image uploads.
+- **Details:** Allow users to pick an image from their gallery and store it in Firebase Storage, linking the URL to their Firestore profile.
 
-### 3. Create Initial Screens & Navigation (Completed)
-- **Action:** Built the basic screen structure and navigation routes.
-- **Screens Created:**
-  - `OnboardingScreen`
-  - `LoginScreen`
-  - `HomeScreen`
-  - `QRScreen`
-  - `HistoryScreen`
-  - `ProfileScreen`
-  - `ScanAndPayScreen`
-  - `PaymentConfirmationScreen`
-- **Navigation:** Implemented a `BottomNavigationBar` and the complete routing logic with `go_router`.
+### 3. Advanced Firestore Integration
+- **Action:** Refine `FirestoreService` for better error handling and real-time updates.
+- **Goal:** Ensure the app remains responsive and provides clear feedback during network issues or permission errors.
 
-### 4. Design the Beneficiary Home Screen (Completed)
-- **Action:** Developed the UI for the `HomeScreen` with a balance display and action buttons.
-
-### 5. Implemented QR Code and Scanning Features (Completed)
-- **Action:** Integrated `qr_flutter` to display user QR codes and `mobile_scanner` to scan QR codes for payments, with navigation to a payment confirmation screen.
-
-### 6. Completed History and Profile Screens (Completed)
-- **Action:** Implemented the UI for the transaction history and user profile screens.
+### 4. Admin Panel Enhancements
+- **Action:** Add more administrative controls, such as viewing aggregate transaction stats or managing aid distribution quotas.

@@ -52,6 +52,8 @@ final _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   redirect: (context, state) {
     final appProvider = context.read<AppProvider>();
+    if (!appProvider.isInitialized) return null;
+
     final loggingIn = state.matchedLocation == '/login';
     final onboarding = state.matchedLocation == '/';
 

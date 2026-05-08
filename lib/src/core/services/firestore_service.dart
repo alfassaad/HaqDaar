@@ -1,11 +1,26 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:myapp/src/core/models/user_model.dart';
 import 'package:myapp/src/core/models/transaction_model.dart' as models;
 import 'package:flutter/material.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  // Upload image to Firebase Storage
+  Future<String?> uploadProfileImage(String userId, File imageFile) async {
+    try {
+      final ref = _storage.ref().child('user_profiles').child('$userId.jpg');
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Upload Error: $e');
+      return null;
+    }
+  }
 
   // Get one-time user profile
   Future<UserProfile?> getUser(String userId) async {
@@ -67,31 +82,20 @@ class FirestoreService {
         final senderSnapshot = await transaction.get(senderDoc);
         final receiverSnapshot = await transaction.get(receiverDoc);
 
-        if (!senderSnapshot.exists) {
-          debugPrint('SENDER NOT FOUND');
-          return false;
-        }
-        if (!receiverSnapshot.exists) {
-          debugPrint('RECEIVER NOT FOUND');
-          return false;
-        }
-        if (senderId == receiverId) {
-          debugPrint('SAME USER TRANSACTION BLOCKED');
-          return false;
-        }
+        if (!senderSnapshot.exists) throw Exception('Sender account not found');
+        if (!receiverSnapshot.exists) throw Exception('Recipient account not found');
+        if (senderId == receiverId) throw Exception('Self-transfer is not allowed');
 
         final senderData = UserProfile.fromMap(senderSnapshot.data()!);
         final receiverData = UserProfile.fromMap(receiverSnapshot.data()!);
 
         // Role-based validation
         if (!senderData.canSendP2P) {
-          debugPrint('ROLE BLOCKED: Merchants cannot send P2P payments');
-          return false;
+          throw Exception('Your account type (${senderData.role.name}) is not allowed to send payments.');
         }
 
         if (senderData.balance < amount) {
-          debugPrint('INSUFFICIENT BALANCE');
-          return false;
+          throw Exception('Insufficient balance. Your current balance is Rs. ${senderData.balance}');
         }
 
         // 1. Update balances
@@ -125,7 +129,8 @@ class FirestoreService {
         return true;
       });
     } catch (e) {
-      debugPrint('Payment Error: $e');
+      debugPrint('Payment Transaction Error: $e');
+      // Re-throw so the UI can catch it if needed, or just return false
       return false;
     }
   }

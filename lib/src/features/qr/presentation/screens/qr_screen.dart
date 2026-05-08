@@ -80,6 +80,7 @@ class QRScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: () {
+                    // ignore: deprecated_member_use
                     Share.share(
                       'Scan this code to pay ${user.name} on HaqDaar: ${user.id}',
                     );

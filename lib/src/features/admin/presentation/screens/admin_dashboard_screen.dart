@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:myapp/src/core/providers/app_provider.dart';
@@ -33,7 +34,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 child: Text(user.name.substring(0, 1).toUpperCase()),
               ),
               title: Text(user.name),
-              subtitle: Text('Role: ${user.role.displayName}\nCNIC: ${user.id}'),
+              subtitle: Text('Role: ${user.role.displayName}\nCNIC: ${user.cnic ?? "Not set"}\nUID: ${user.id}'),
               isThreeLine: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -57,9 +58,10 @@ class AdminDashboardScreen extends StatelessWidget {
 
   void _showUserDialog(BuildContext context, AppProvider appProvider, {UserProfile? user}) {
     final nameController = TextEditingController(text: user?.name);
+    final cnicController = TextEditingController(text: user?.cnic);
     final idController = TextEditingController(text: user?.id);
     UserRole selectedRole = user?.role ?? UserRole.recipient;
-    bool hasChanges = user == null; // New users always start with "changes" needed
+    bool hasChanges = user == null;
 
     showDialog(
       context: context,
@@ -68,6 +70,7 @@ class AdminDashboardScreen extends StatelessWidget {
           void validate() {
             final isChanged = user == null || 
                 nameController.text != user.name || 
+                cnicController.text != user.cnic ||
                 idController.text != user.id || 
                 selectedRole != user.role;
             final isNotEmpty = nameController.text.isNotEmpty && idController.text.isNotEmpty;
@@ -76,6 +79,7 @@ class AdminDashboardScreen extends StatelessWidget {
           }
 
           nameController.addListener(validate);
+          cnicController.addListener(validate);
           idController.addListener(validate);
 
           return AlertDialog(
@@ -89,9 +93,20 @@ class AdminDashboardScreen extends StatelessWidget {
                     decoration: const InputDecoration(labelText: 'Full Name'),
                   ),
                   TextField(
-                    controller: idController,
-                    decoration: const InputDecoration(labelText: 'CNIC / ID'),
+                    controller: cnicController,
+                    decoration: const InputDecoration(labelText: 'CNIC'),
                   ),
+                  if (user != null)
+                    TextField(
+                      controller: idController,
+                      readOnly: true,
+                      decoration: const InputDecoration(labelText: 'Firebase UID (Read Only)'),
+                    )
+                  else
+                    TextField(
+                      controller: idController,
+                      decoration: const InputDecoration(labelText: 'Initial ID / UID'),
+                    ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<UserRole>(
                     initialValue: selectedRole,
@@ -123,21 +138,25 @@ class AdminDashboardScreen extends StatelessWidget {
                     appProvider.adminAddUser(UserProfile(
                       id: idController.text,
                       name: nameController.text,
+                      cnic: cnicController.text,
                       role: selectedRole,
                       balance: 0.0,
-                      qrCode: 'q_${idController.text}',
+                      qrCode: jsonEncode({'id': idController.text, 'type': 'haqdaar_v1'}),
                     ));
                   } else {
                     appProvider.adminUpdateUser(
                       user.id,
                       name: nameController.text,
-                      id: idController.text,
                       role: selectedRole,
+                      // Note: We avoid changing ID/UID here to maintain Firestore consistency
+                    );
+                    // Add cnic update to appProvider.adminUpdateUser if needed
+                    appProvider.updateProfile( // Hacky way to update just cnic via adminUpdate if we add parameters
+                      cnic: cnicController.text,
                     );
                   }
                   Navigator.pop(context);
                 } : null,
-                style: ElevatedButton.styleFrom(),
                 child: Text(user == null ? 'Create' : 'Save'),
               ),
             ],

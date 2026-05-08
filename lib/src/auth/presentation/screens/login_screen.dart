@@ -110,14 +110,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final phoneInput = _phoneController.text.trim();
       
       String name = 'User';
-      String id = cnic;
       String phone = phoneInput;
 
-
-      
       await Provider.of<AppProvider>(context, listen: false).login(
         name: name,
-        id: id,
+        cnic: cnic,
         phone: phone,
       );
       
