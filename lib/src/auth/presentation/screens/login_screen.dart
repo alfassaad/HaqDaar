@@ -35,9 +35,18 @@ class _LoginScreenState extends State<LoginScreen> {
     final cnic = _cnicController.text.trim();
     String phoneInput = _phoneController.text.trim();
 
-    if (cnic.isEmpty || phoneInput.isEmpty || cnic.length < 10) {
+    // Validate CNIC is numeric and 10+ digits
+    if (cnic.isEmpty || !RegExp(r'^\d{10,}$').hasMatch(cnic)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid CNIC (10+ digits) and Phone Number')),
+        const SnackBar(content: Text('Please enter valid CNIC (10+ numeric digits)')),
+      );
+      return;
+    }
+    
+    // Validate phone is not empty
+    if (phoneInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a phone number')),
       );
       return;
     }

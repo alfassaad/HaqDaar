@@ -83,7 +83,7 @@ class UserProfile {
   bool get canDisburse => role == UserRole.donor;
   bool get canClaimAid => role == UserRole.recipient;
   bool get isMerchant => role == UserRole.merchant;
-  bool get canSendP2P => role != UserRole.merchant;
+  bool get canSendP2P => role != UserRole.merchant && role != UserRole.donor;
   bool get isAdmin => role == UserRole.admin;
 
   UserProfile copyWith({

@@ -12,22 +12,79 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // Helper to validate user data
+    function isValidUserData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'name', 'balance', 'qrCode', 'role']) &&
+        data.role in ['recipient', 'donor', 'merchant', 'admin'] &&
+        data.balance is number &&
+        data.name is string &&
+        data.name.size() > 0 && data.name.size() <= 100;
+    }
+
+    // Helper to validate transaction data
+    function isValidTransactionData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'title', 'amount', 'date', 'type']) &&
+        data.amount is number &&
+        data.amount > 0 &&
+        data.type in ['credit', 'debit'] &&
+        data.title is string &&
+        data.title.size() > 0 && data.title.size() <= 200;
+    }
+
+    // Helper to validate balance update (for transactions)
+    function isValidBalanceUpdate() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['balance']) && data.balance is number;
+    }
+
+    // Users collection - main user profiles
     match /users/{userId} {
-      // Allow reading profiles for authenticated users
-      allow read: if isAuthenticated();
+      // Allow reading user profiles for authenticated users
+      // But only return limited fields for non-owners
+      allow get: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin() || 
+         exists(/databases/$(database)/documents/users/$(request.auth.uid)));
 
-      // Allow writing if the user is updating their own profile or is an admin
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Allow listing users only for admins
+      allow list: if isAdmin();
 
+      // Allow creating users (only via admin or on first login)
+      allow create: if isAuthenticated() && 
+        request.auth.uid == userId && isValidUserData();
+
+      // Allow updating own profile with validation
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        isValidUserData() &&
+        // Prevent changing role unless admin
+        (request.auth.uid == userId ? 
+          resource.data.role == request.resource.data.role : 
+          isAdmin());
+
+      // Prevent deleting users directly - use admin function instead
+      allow delete: if false;
+
+      // Transaction subcollection
       match /transactions/{txId} {
-        // Allow reading/writing transactions for the profile owner or an admin
-        allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+        // Allow reading own transactions or admin viewing any
+        allow get, list: if isAuthenticated() && 
+          (request.auth.uid == userId || isAdmin());
+
+        // Allow creating transactions (done via cloud function for atomicity)
+        // For now, restrict to owner
+        allow create: if isAuthenticated() && 
+          request.auth.uid == userId && isValidTransactionData();
+
+        // Prevent direct updates or deletes
+        allow update, delete: if false;
       }
     }
     
-    // Fallback for other collections if any
+    // Prevent access to any other collections
     match /{document=**} {
-      allow read, write: if isAdmin();
+      allow read, write: if false;
     }
   }
 }

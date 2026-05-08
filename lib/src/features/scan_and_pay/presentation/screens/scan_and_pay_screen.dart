@@ -35,18 +35,21 @@ class _ScanAndPayScreenState extends State<ScanAndPayScreen> {
           const SnackBar(content: Text('Invalid HaqDaar QR Code')),
         );
       }
-    } catch (e) {
-      // Fallback for legacy raw ID codes if needed, or just show error
-      if (rawCode.isNotEmpty && !rawCode.contains('{')) {
-        isScanCompleted = true;
-        controller.stop();
-        context.go('/confirm-payment', extra: rawCode);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not recognize QR code format')),
-        );
-      }
-    }
+     } catch (e) {
+       // Fallback for legacy raw ID codes if needed, or just show error
+       if (rawCode.isNotEmpty && 
+           !rawCode.contains('{') && 
+           rawCode.length >= 10 &&
+           RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(rawCode)) {
+         isScanCompleted = true;
+         controller.stop();
+         context.go('/confirm-payment', extra: rawCode);
+       } else {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Could not recognize QR code format')),
+         );
+       }
+     }
   }
 
   @override

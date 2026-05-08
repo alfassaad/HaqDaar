@@ -27,9 +27,20 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
     _lookupRecipient();
   }
 
-  Future<void> _lookupRecipient() async {
+   Future<void> _lookupRecipient() async {
     final receiverId = widget.merchantId;
     if (receiverId.isEmpty) return;
+    
+    // Validate format
+    if (!receiverId.startsWith('haqdaar_')) {
+      if (!mounted) return;
+      setState(() {
+        _recipientName = 'Invalid ID Format';
+        _recipientRole = null;
+      });
+      return;
+    }
+    
     final cleanReceiverId = receiverId.replaceFirst('haqdaar_', '');
     
     final appProvider = context.read<AppProvider>();
@@ -45,8 +56,9 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
 
   void _validateAmount() {
     final amount = double.tryParse(_amountController.text);
+    const double maxAmount = 1000000; // 1 million PKR max
     setState(() {
-      _isAmountValid = amount != null && amount > 0;
+      _isAmountValid = amount != null && amount > 0 && amount <= maxAmount;
     });
   }
 
@@ -62,8 +74,14 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
     final amountText = _amountController.text;
     if (amountText.isEmpty) return;
 
+    const double maxAmount = 1000000;
     final amount = double.tryParse(amountText);
-    if (amount == null || amount <= 0) return;
+    if (amount == null || amount <= 0 || amount > maxAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid amount. Maximum is Rs. 1,000,000')),
+      );
+      return;
+    }
 
     final appProvider = context.read<AppProvider>();
     if (amount > appProvider.user.balance) {
@@ -79,16 +97,27 @@ class _PaymentConfirmationScreenState extends State<PaymentConfirmationScreen> {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    final receiverId = widget.merchantId;
-    if (receiverId.isEmpty) {
-      if (!context.mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid Merchant ID')),
-      );
-      return;
-    }
-    final cleanReceiverId = receiverId.replaceFirst('haqdaar_', '');
+     final receiverId = widget.merchantId;
+     if (receiverId.isEmpty) {
+       if (!context.mounted) return;
+       Navigator.pop(context);
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Invalid Merchant ID')),
+       );
+       return;
+     }
+     
+     // Validate format
+     if (!receiverId.startsWith('haqdaar_')) {
+       if (!context.mounted) return;
+       Navigator.pop(context);
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(content: Text('Invalid Merchant ID format')),
+       );
+       return;
+     }
+     
+     final cleanReceiverId = receiverId.replaceFirst('haqdaar_', '');
 
     final success = await appProvider.sendMoney(
       receiverId: cleanReceiverId,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:myapp/src/core/providers/app_provider.dart';
-import 'package:intl/intl.dart';
+import 'package:myapp/src/core/utils/date_formatter.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -9,7 +9,6 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final transactions = context.watch<AppProvider>().transactions;
-    final dateFormatter = DateFormat('MMM dd, yyyy');
 
     return Scaffold(
       appBar: AppBar(
@@ -62,7 +61,7 @@ class HistoryScreen extends StatelessWidget {
                       ),
                     ),
                     title: Text(tx.title),
-                    subtitle: Text(dateFormatter.format(tx.date)),
+                    subtitle: Text(DateFormatter.formatTransactionDate(tx.date)),
                     trailing: Text(
                       '${tx.isCredit ? '+' : '-'} Rs. ${tx.amount.toStringAsFixed(0)}',
                       style: TextStyle(

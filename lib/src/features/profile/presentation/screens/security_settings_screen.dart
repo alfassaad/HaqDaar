@@ -59,16 +59,35 @@ class SecuritySettingsScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.length == 4) {
-                appProvider.setPasscode(controller.text);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Passcode updated successfully')),
-                );
-                Navigator.pop(context);
-              }
-            },
+TextButton(
+             onPressed: () {
+               if (controller.text.length == 4 && controller.text.isNotEmpty && RegExp(r'^\d+$').hasMatch(controller.text)) {
+                 // Check for weak passcodes
+                 final weakPasscodes = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234', '4321'];
+                 if (weakPasscodes.contains(controller.text)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Please use a stronger passcode'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                   return;
+                 }
+                 
+                 appProvider.setPasscode(controller.text);
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(content: Text('Passcode updated successfully')),
+                 );
+                 Navigator.pop(context);
+               } else {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(
+                      content: const Text('Passcode must be 4 digits'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+             },
             child: const Text('Update'),
           ),
         ],

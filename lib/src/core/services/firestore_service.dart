@@ -111,7 +111,6 @@ class FirestoreService {
           amount: amount,
           date: DateTime.now(),
           type: models.TransactionType.debit,
-          icon: Icons.send,
         );
 
         final creditTx = models.Transaction(
@@ -120,7 +119,6 @@ class FirestoreService {
           amount: amount,
           date: DateTime.now(),
           type: models.TransactionType.credit,
-          icon: Icons.call_received,
         );
 
         transaction.set(senderDoc.collection('transactions').doc(txId), debitTx.toMap());
@@ -149,5 +147,12 @@ class FirestoreService {
   Future<List<UserProfile>> getAllUsers() async {
     final snapshot = await _db.collection('users').get();
     return snapshot.docs.map((doc) => UserProfile.fromMap(doc.data())).toList();
+  }
+
+  // Stream all users (for admin dashboard)
+  Stream<List<UserProfile>> streamAllUsers() {
+    return _db.collection('users').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => UserProfile.fromMap(doc.data())).toList();
+    });
   }
 }

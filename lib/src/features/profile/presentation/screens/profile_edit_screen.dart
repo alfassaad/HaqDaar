@@ -32,27 +32,28 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       maxWidth: 500,
     );
 
-    if (pickedFile != null) {
-      setState(() => _isUploading = true);
-      final provider = context.read<AppProvider>();
-      try {
-        final success = await provider.uploadProfilePicture(File(pickedFile.path));
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success ? 'Profile picture updated!' : 'Upload failed'),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      } catch (e) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      } finally {
-        if (mounted) setState(() => _isUploading = false);
+      if (pickedFile != null) {
+        setState(() => _isUploading = true);
+        if (!mounted) return;
+        final provider = context.read<AppProvider>();
+        try {
+          final success = await provider.uploadProfilePicture(File(pickedFile.path));
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(success ? 'Profile picture updated!' : 'Upload failed'),
+              backgroundColor: success ? Colors.green : Colors.red,
+            ),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        } finally {
+          if (mounted) setState(() => _isUploading = false);
+        }
       }
-    }
   }
 
   @override

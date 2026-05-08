@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:myapp/src/core/providers/app_provider.dart';
 import 'package:myapp/src/core/models/transaction_model.dart' as models;
+import 'package:myapp/src/core/utils/date_formatter.dart';
 import 'package:myapp/src/features/home/presentation/widgets/notification_popup.dart';
-import 'package:intl/intl.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -52,7 +52,6 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final balance = context.select((AppProvider p) => p.user.balance);
-    final formatter = NumberFormat.currency(symbol: 'Rs. ', decimalDigits: 0);
 
     return Container(
       width: double.infinity,
@@ -77,7 +76,7 @@ class BalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            formatter.format(balance),
+            DateFormatter.formatCurrency(balance),
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -137,6 +136,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
     super.dispose();
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -146,7 +152,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good Morning',
+                _getGreeting(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
               ),
               Text(
@@ -286,7 +292,6 @@ class TransactionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final transactions = context.watch<AppProvider>().transactions;
-    final formatter = DateFormat('yyyy-MM-dd');
 
     if (transactions.isEmpty) {
       return const Center(child: Text('No transactions yet'));
@@ -303,7 +308,7 @@ class TransactionList extends StatelessWidget {
             child: Icon(tx.icon, size: 24, color: tx.isCredit ? Colors.green : Colors.red),
           ),
           title: Text(tx.title),
-          subtitle: Text(formatter.format(tx.date)),
+          subtitle: Text(DateFormatter.formatShortDate(tx.date)),
           trailing: Text(
             '${tx.isCredit ? '+' : '-'} Rs. ${tx.amount.toStringAsFixed(0)}',
             style: TextStyle(

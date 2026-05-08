@@ -8,18 +8,18 @@ class Transaction {
   final double amount;
   final DateTime date;
   final TransactionType type;
-  final IconData icon;
 
-  Transaction({
+  const Transaction({
     required this.id,
     required this.title,
     required this.amount,
     required this.date,
     required this.type,
-    required this.icon,
   });
 
   bool get isCredit => type == TransactionType.credit;
+
+  IconData get icon => isCredit ? Icons.call_received : Icons.send;
 
   Map<String, dynamic> toMap() {
     return {
@@ -28,7 +28,6 @@ class Transaction {
       'amount': amount,
       'date': date.toIso8601String(),
       'type': type.name,
-      'iconCode': icon.codePoint,
     };
   }
 
@@ -39,7 +38,6 @@ class Transaction {
       amount: (map['amount'] ?? 0.0).toDouble(),
       date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
       type: TransactionType.values.byName(map['type'] ?? 'debit'),
-      icon: IconData(map['iconCode'] ?? Icons.payment.codePoint, fontFamily: 'MaterialIcons'),
     );
   }
 }

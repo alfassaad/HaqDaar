@@ -20,12 +20,13 @@ class AppProvider with ChangeNotifier {
     phoneNumber: '',
   );
 
-  List<models.Transaction> _transactions = [];
-  bool _hasNewNotification = false;
-  bool _isInitialized = false;
-  StreamSubscription? _userSub;
-  StreamSubscription? _txSub;
-  StreamSubscription? _authSub;
+   List<models.Transaction> _transactions = [];
+   bool _hasNewNotification = false;
+   bool _isInitialized = false;
+   StreamSubscription? _userSub;
+   StreamSubscription? _txSub;
+   StreamSubscription? _authSub;
+   StreamSubscription? _allUsersSub;
 
   List<UserProfile> _allUsers = [];
 
@@ -43,7 +44,7 @@ class AppProvider with ChangeNotifier {
         if (profile != null) {
           _user = profile;
         } else {
-          // If profile doesn't exist yet, we'll wait for the stream or a manual save
+          // If profile doesn't exist yet, create and save it
           _user = UserProfile(
             id: authUser.uid,
             name: authUser.displayName ?? 'New User',
@@ -51,6 +52,7 @@ class AppProvider with ChangeNotifier {
             qrCode: jsonEncode({'id': authUser.uid, 'type': 'recipient'}),
             phoneNumber: authUser.phoneNumber,
           );
+          await _firestoreService.saveUser(_user);
         }
         _initStreams();
       } else {
@@ -65,6 +67,7 @@ class AppProvider with ChangeNotifier {
   void _clearUserData() {
     _userSub?.cancel();
     _txSub?.cancel();
+    _allUsersSub?.cancel();
     _transactions = [];
     _user = UserProfile(
       id: 'NOT_LOGGED_IN',
@@ -89,12 +92,12 @@ class AppProvider with ChangeNotifier {
     _userSub?.cancel();
     _txSub?.cancel();
 
-    if (_user.isAdmin) {
-      _firestoreService.getAllUsers().then((users) {
-        _allUsers = users;
-        notifyListeners();
-      });
-    }
+     if (_user.isAdmin) {
+       _allUsersSub = _firestoreService.streamAllUsers().listen((users) {
+         _allUsers = users;
+         notifyListeners();
+       });
+     }
 
     _userSub = _firestoreService.streamUser(_user.id).listen(
       (user) {
@@ -257,11 +260,12 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  @override
-  void dispose() {
-    _userSub?.cancel();
-    _txSub?.cancel();
-    _authSub?.cancel();
-    super.dispose();
-  }
+   @override
+   void dispose() {
+     _userSub?.cancel();
+     _txSub?.cancel();
+     _authSub?.cancel();
+     _allUsersSub?.cancel();
+     super.dispose();
+   }
 }

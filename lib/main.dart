@@ -21,6 +21,10 @@ import 'package:myapp/src/features/payment/presentation/screens/payment_confirma
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+// Analytics can be added when dependencies are compatible:
+// import 'package:firebase_analytics/firebase_analytics.dart';
+// import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +33,19 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    
+    // To add Analytics and Crashlytics later:
+    // _analytics = FirebaseAnalytics.instance;
+    // await _analytics.setAnalyticsCollectionEnabled(true);
+    // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    
+    // To add App Check (for production):
+    // await FirebaseAppCheck.instance.activate(
+    //   androidProvider: AndroidProvider.playIntegrity,
+    //   appleProvider: AppleProvider.appAttest,
+    // );
+    
+    debugPrint('Firebase services initialized successfully');
   } catch (e) {
     debugPrint('Firebase Initialization Error: $e');
   }
@@ -105,32 +122,30 @@ final _router = GoRouter(
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
-          routes: [
-            GoRoute(
-              path: 'edit',
-              builder: (context, state) => const ProfileEditScreen(),
-            ),
-            GoRoute(
-              path: 'security',
-              builder: (context, state) => const SecuritySettingsScreen(),
-            ),
-            GoRoute(
-              path: 'help',
-              builder: (context, state) => const HelpCenterScreen(),
-            ),
-            GoRoute(
-              path: 'privacy',
-              builder: (context, state) => const PrivacyPolicyScreen(),
-            ),
-            GoRoute(
-              path: 'about',
-              builder: (context, state) => const AboutScreen(),
-            ),
-            GoRoute(
-              path: 'admin',
-              builder: (context, state) => const AdminDashboardScreen(),
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/profile/edit',
+          builder: (context, state) => const ProfileEditScreen(),
+        ),
+        GoRoute(
+          path: '/profile/security',
+          builder: (context, state) => const SecuritySettingsScreen(),
+        ),
+        GoRoute(
+          path: '/profile/help',
+          builder: (context, state) => const HelpCenterScreen(),
+        ),
+        GoRoute(
+          path: '/profile/privacy',
+          builder: (context, state) => const PrivacyPolicyScreen(),
+        ),
+        GoRoute(
+          path: '/profile/about',
+          builder: (context, state) => const AboutScreen(),
+        ),
+        GoRoute(
+          path: '/profile/admin',
+          builder: (context, state) => const AdminDashboardScreen(),
         ),
       ],
     ),
